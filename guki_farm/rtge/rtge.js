@@ -17,6 +17,9 @@ var rtge = {
 		this.visible = true; ///< is the object drawn and clickable
 		this.tick = null; ///< function called to update the object for the next frame
 		this.click = null; ///< function called when the object is left clicked
+		this.mouseOver = null; ///< function called when the mouse moves over the object, param is world pos of the mouse
+		this.mouseNotOver = null; ///< function called when the mouse moves outside the object, param is world pos of the mouse
+		this.preDraw = null; ///< function called just before drawing the object, no param
 	},
 
 	// A camera viewing the scene
@@ -228,6 +231,9 @@ var rtge = {
 					bottomBound >= 0
 				)
 				{
+					if (o.preDraw != null) {
+						o.preDraw();
+					}
 					rtge.canvasCtx.drawImage(img, imgPos.x, imgPos.y);
 				}
 			}
@@ -377,8 +383,8 @@ var rtge = {
 			if (o.visible && rtge.objectIsAt(o, pos)) {
 				if (o.click != null) {
 					o.click();
+					return;
 				}
-				return;
 			}
 		}
 
@@ -432,6 +438,20 @@ var rtge = {
 	canvasMoveInteraction: function(pos) {
 		// Moving forbids clicking
 		rtge.canClick = false;
+
+		// Inform dynamic objects
+		var world_pos = rtge.canvasPosToWorldPos(pos);
+		for (i = rtge.state.objects.length - 1; i >= 0; --i) {
+			var o = rtge.state.objects[i];
+			if (o.visible) {
+				var o_is_under_cursor = rtge.objectIsAt(o, world_pos);
+				if (o.mouseOver != null && o_is_under_cursor) {
+					o.mouseOver(world_pos);
+				}else if (o.mouseNotOver != null && !o_is_under_cursor) {
+					o.mouseNotOver(world_pos);
+				}
+			}
+		}
 
 		// Update interface elements state
 		for (var i = 0; i < rtge.graphicInterface.length; ++i) {

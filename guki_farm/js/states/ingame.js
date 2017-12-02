@@ -6,11 +6,23 @@ var InGame = {
 			'img/bg.png',
 			'img/hen.png',
 			'img/hen_dead.png',
+			'img/hen_eat.png',
+			'img/need_icons_eat.png',
 		];
 	},
 
 	getAnimations: function() {
 		var animations = {};
+
+		var action_btn_feed = new rtge.Animation();
+		action_btn_feed.steps = ['img/action_btn_feed.png'];
+		action_btn_feed.durations = [600000];
+		animations['ingame.action.btns.feed'] = action_btn_feed;
+
+		var action_circle = new rtge.Animation();
+		action_circle.steps = ['img/action_circle.png'];
+		action_circle.durations = [600000];
+		animations['ingame.action.circle'] = action_circle;
 
 		var hen_idle = new rtge.Animation();
 		hen_idle.steps = ['img/hen.png'];
@@ -22,15 +34,15 @@ var InGame = {
 		hen_dead.durations = [600000];
 		animations['ingame.hen.dead'] = hen_dead;
 
-		var action_circle = new rtge.Animation();
-		action_circle.steps = ['img/action_circle.png'];
-		action_circle.durations = [600000];
-		animations['ingame.action.circle'] = action_circle;
+		var hen_eating = new rtge.Animation();
+		hen_eating.steps = ['img/hen_eat.png'];
+		hen_eating.durations = [600000];
+		animations['ingame.hen.eating'] = hen_eating;
 
-		var action_btn_feed = new rtge.Animation();
-		action_btn_feed.steps = ['img/action_btn_feed.png'];
-		action_btn_feed.durations = [600000];
-		animations['ingame.action.btns.feed'] = action_btn_feed;
+		var need_eat = new rtge.Animation();
+		need_eat.steps = ['img/need_icons_eat.png'];
+		need_eat.durations = [600000];
+		animations['ingame.need_icons.eat'] = need_eat;
 
 		return animations;
 	},
@@ -79,7 +91,7 @@ var InGame = {
 				return;
 			}
 
-			this.focused_hen.needs['food'].value = 0;
+			this.focused_hen.startEating();
 		};
 
 		// Initialization logic
@@ -90,6 +102,7 @@ var InGame = {
 	},
 
 	Hen: function(x, y, scene) {
+		// Data
 		rtge.DynObject.call(this);
 		this.x = x;
 		this.y = y;
@@ -102,16 +115,32 @@ var InGame = {
 		this.needs = {
 			'food': {value: 0, speed:.1},
 		};
+		this.needIcons = {
+			'food': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'food', 0, -40),
+		};
+		this.needIconsAppearing = false;
 		this.scene = scene;
+		this.state = null;
 
+		// Methods
 		this.tick = function(timeElapsed) {
 			// Avoid huges steps (easily done by tab-switching)
 			timeElapsed = Math.min(timeElapsed, 40);
 
 			// Move the Hen
-			this.updateDirection();
-			this.x += this.direction.x * this.speed * timeElapsed;
-			this.y += this.direction.y * this.speed * timeElapsed;
+			switch (this.state.name) {
+				case 'walking':
+					this.updateDirection();
+					this.x += this.direction.x * this.speed * timeElapsed;
+					this.y += this.direction.y * this.speed * timeElapsed;
+					break;
+				case 'eating':
+					this.state.counter -= timeElapsed;
+					if (this.state.counter <= 0) {
+						this.startWalking();
+					}
+					break;
+			};
 
 			// Handle needs
 			for (need_name in this.needs) {
@@ -126,6 +155,50 @@ var InGame = {
 
 		this.click = function() {
 			this.scene.placeActionCircle(this);
+			this.showNeeds();
+		};
+
+		this.mouseOver = function(mouse_pos) {
+			this.showNeeds();
+		};
+
+		this.mouseNotOver = function(mouse_pos) {
+			if (this.scene.focused_hen !== this) {
+				this.hideNeeds();
+			}
+		};
+
+		this.showNeeds = function() {
+			if (this.needIconsAppearing) {
+				return;
+			}
+			this.needIconsAppearing = true;
+
+			for (var need_name in this.needIcons) {
+				rtge.addObject(this.needIcons[need_name]);
+			}
+		};
+
+		this.hideNeeds = function() {
+			if (! this.needIconsAppearing) {
+				return;
+			}
+			this.needIconsAppearing = false;
+
+			for (var need_name in this.needIcons) {
+				rtge.removeObject(this.needIcons[need_name]);
+			}
+		};
+
+		this.startWalking = function() {
+			this.animation = 'ingame.hen.idle';
+			this.state = {name: 'walking'};
+		};
+
+		this.startEating = function() {
+			this.state = {name: 'eating', counter: 1000};
+			this.animation = 'ingame.hen.eating';
+			this.needs['food'].value = 0;
 		};
 
 		this.die = function() {
@@ -133,6 +206,7 @@ var InGame = {
 				this.scene.removeActionCircle();
 			}
 
+			this.hideNeeds();
 			rtge.removeObject(this);
 			rtge.addObject(new InGame.DeadHen(this));
 		};
@@ -190,6 +264,9 @@ var InGame = {
 			}
 			return {x: direction.x * intensity, y: direction.y * intensity};
 		};
+
+		// Initialization logic
+		this.startWalking();
 	},
 
 	DeadHen: function(hen) {
@@ -207,6 +284,41 @@ var InGame = {
 			if (this.y < -10) {
 				rtge.removeObject(this);
 			}
+		};
+	},
+
+	NeedIcon: function(hen, animation, need_name, x, y) {
+		rtge.DynObject.call(this);
+		this.x = hen.x + x;
+		this.y = hen.y + y;
+		this.anchorX = 15;
+		this.anchorY = 15;
+		this.animation = animation;
+
+		this.hen = hen;
+		this.need_name = need_name;
+		this.offset_x = x;
+		this.offset_y = y;
+
+		this.tick = function(timeElapsed) {
+			this.x = this.hen.x + this.offset_x;
+			this.y = this.hen.y + this.offset_y;
+		};
+
+		this.preDraw = function() {
+			var red = 255;
+			var blue = 255;
+			var factor;
+			var need_value = this.hen.needs[this.need_name].value;
+			if (need_value <= 50) {
+				factor = need_value / 50.;
+				red *= factor;
+			}else {
+				factor = 1 - (need_value - 50.) / 50.;
+				blue *= factor;
+			}
+			rtge.canvasCtx.fillStyle = 'rgb('+Math.floor(red)+','+Math.floor(blue)+',0)';
+			rtge.canvasCtx.fillRect(this.x - this.anchorX, this.y - this.anchorY, 30, 30);
 		};
 	},
 

@@ -1,6 +1,8 @@
 var InGame = {
 	getGraphics: function() {
 		return [
+			'img/action_btn_feed.png',
+			'img/action_circle.png',
 			'img/bg.png',
 			'img/hen.png',
 			'img/hen_dead.png',
@@ -20,20 +22,74 @@ var InGame = {
 		hen_dead.durations = [600000];
 		animations['ingame.hen.dead'] = hen_dead;
 
+		var action_circle = new rtge.Animation();
+		action_circle.steps = ['img/action_circle.png'];
+		action_circle.durations = [600000];
+		animations['ingame.action.circle'] = action_circle;
+
+		var action_btn_feed = new rtge.Animation();
+		action_btn_feed.steps = ['img/action_btn_feed.png'];
+		action_btn_feed.durations = [600000];
+		animations['ingame.action.btns.feed'] = action_btn_feed;
+
 		return animations;
 	},
 
 	State: function() {
+		// Data
+		this.action_circle = null;
+		this.focused_hen = null;
+
+		// Methods
 		this.tick = function(timeElapsed) {
 		};
 
+		this.worldClick = function(x, y) {
+			this.removeActionCircle();
+		};
+
+		this.placeActionCircle = function(hen) {
+			if (this.action_circle != null) {
+				this.removeActionCircle();
+			}
+			this.action_circle = new InGame.ActionCircle(hen);
+			rtge.addObject(this.action_circle);
+			for (var btn_idx = 0; btn_idx < this.action_circle.btns.length; ++btn_idx) {
+				rtge.addObject(this.action_circle.btns[btn_idx]);
+			}
+			this.focused_hen = hen;
+		};
+
+		this.removeActionCircle = function() {
+			if (this.action_circle == null) {
+				return;
+			}
+
+			rtge.removeObject(this.action_circle);
+			for (var btn_idx = 0; btn_idx < this.action_circle.btns.length; ++btn_idx) {
+				rtge.removeObject(this.action_circle.btns[btn_idx]);
+			}
+
+			this.action_circle = null;
+			this.focused_hen = null;
+		};
+
+		this.actionFeed = function() {
+			if (this.focused_hen == null) {
+				return;
+			}
+
+			this.focused_hen.needs['food'].value = 0;
+		};
+
+		// Initialization logic
 		rtge.state.terrain = 'img/bg.png';
 		for (var i = 0; i < 100; ++i) {
-			rtge.addObject(new InGame.Hen(600, 500));
+			rtge.addObject(new InGame.Hen(600, 500, this));
 		}
 	},
 
-	Hen: function(x, y) {
+	Hen: function(x, y, scene) {
 		rtge.DynObject.call(this);
 		this.x = x;
 		this.y = y;
@@ -42,10 +98,11 @@ var InGame = {
 		this.animation = 'ingame.hen.idle';
 
 		this.direction = {x: 1, y: 0};
-		this.speed = 0.2;
+		this.speed = 0.1;
 		this.needs = {
 			'food': {value: 0, speed:.1},
 		};
+		this.scene = scene;
 
 		this.tick = function(timeElapsed) {
 			// Avoid huges steps (easily done by tab-switching)
@@ -67,7 +124,15 @@ var InGame = {
 			}
 		};
 
+		this.click = function() {
+			this.scene.placeActionCircle(this);
+		};
+
 		this.die = function() {
+			if (this.scene.focused_hen === this) {
+				this.scene.removeActionCircle();
+			}
+
 			rtge.removeObject(this);
 			rtge.addObject(new InGame.DeadHen(this));
 		};
@@ -142,6 +207,53 @@ var InGame = {
 			if (this.y < -10) {
 				rtge.removeObject(this);
 			}
+		};
+	},
+
+	ActionCircle: function(hen) {
+		rtge.DynObject.call(this);
+		this.x = hen.x;
+		this.y = hen.y - 40;
+		this.z = 1;
+		this.anchorX = 250;
+		this.anchorY = 250;
+		this.animation = 'ingame.action.circle';
+
+		this.hen = hen;
+		var scene = this.hen.scene;
+		this.btns = [
+			new InGame.ActionBtn(this, 0, -150, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
+			new InGame.ActionBtn(this, 150, 0, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
+			new InGame.ActionBtn(this, 0, 150, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
+			new InGame.ActionBtn(this, -150, 0, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
+		];
+
+		this.tick = function(timeElapsed) {
+			this.x = hen.x;
+			this.y = hen.y - 40;
+		};
+	},
+
+	ActionBtn: function(action_circle, x, y, animation, callback) {
+		rtge.DynObject.call(this);
+		this.x = action_circle.x + x;
+		this.y = action_circle.y + y;
+		this.z = 1;
+		this.anchorX = 50;
+		this.anchorY = 50;
+		this.animation = animation;
+
+		this.offset_x = x;
+		this.offset_y = y;
+		this.callback = callback;
+
+		this.tick = function(timeElapsed) {
+			this.x = action_circle.x + this.offset_x;
+			this.y = action_circle.y + this.offset_y;
+		};
+
+		this.click = function() {
+			this.callback();
 		};
 	},
 };

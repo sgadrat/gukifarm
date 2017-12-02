@@ -291,9 +291,17 @@ var rtge = {
 	},
 
 	canvasPosToWorldPos: function(pos) {
+		var style = getComputedStyle(document.getElementById('view'));
+		var canvas_width = style.width.slice(0, style.width.length - 2);
+		var canvas_height = style.height.slice(0, style.height.length - 2);
+		var internal_width = 1860;
+		var internal_height = 1080;
+
+		var internal_x = pos.x * (internal_width / canvas_width);
+		var internal_y = pos.y * (internal_height / canvas_height);
 		return {
-			x: pos.x + rtge.camera.x,
-			y: pos.y + rtge.camera.y
+			x: internal_x + rtge.camera.x,
+			y: internal_y + rtge.camera.y
 		};
 	},
 
@@ -514,9 +522,9 @@ var rtge = {
 	},
 	
 	canvasResize: function(evt) {
-		var style = getComputedStyle(rtge.canvas);
+		/*var style = getComputedStyle(rtge.canvas);
 		rtge.canvas.width = 1860; //style.width.slice(0, style.width.length - 2);
-		rtge.canvas.height = 1080; //style.height.slice(0, style.height.length - 2);
+		rtge.canvas.height = 1080; //style.height.slice(0, style.height.length - 2);*/
 	},
 
 	getAnimationImage: function(animation, currentDuration) {

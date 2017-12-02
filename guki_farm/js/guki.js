@@ -19,7 +19,8 @@ var Guki = {
 			graphics,
 			{
 				'globalTick': Guki.tick,
-				//'postRender': Guki.debugOverlay
+				//'postRender': Guki.debugOverlay,
+				'worldClick': Guki.worldClick,
 			},
 			new rtge.Camera()
 		);
@@ -57,5 +58,9 @@ var Guki = {
 				}
 			}
 		}
-	}
+	},
+
+	worldClick: function(x, y) {
+		Guki.state.worldClick(x, y);
+	},
 };

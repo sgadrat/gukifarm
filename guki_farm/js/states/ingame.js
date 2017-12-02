@@ -3,6 +3,7 @@ var InGame = {
 		return [
 			'img/bg.png',
 			'img/hen.png',
+			'img/hen_dead.png',
 		];
 	},
 
@@ -13,6 +14,11 @@ var InGame = {
 		hen_idle.steps = ['img/hen.png'];
 		hen_idle.durations = [600000];
 		animations['ingame.hen.idle'] = hen_idle;
+
+		var hen_dead = new rtge.Animation();
+		hen_dead.steps = ['img/hen_dead.png'];
+		hen_dead.durations = [600000];
+		animations['ingame.hen.dead'] = hen_dead;
 
 		return animations;
 	},
@@ -37,14 +43,33 @@ var InGame = {
 
 		this.direction = {x: 1, y: 0};
 		this.speed = 0.2;
+		this.needs = {
+			'food': {value: 0, speed:.1},
+		};
 
 		this.tick = function(timeElapsed) {
+			// Avoid huges steps (easily done by tab-switching)
 			timeElapsed = Math.min(timeElapsed, 40);
 
+			// Move the Hen
 			this.updateDirection();
-
 			this.x += this.direction.x * this.speed * timeElapsed;
 			this.y += this.direction.y * this.speed * timeElapsed;
+
+			// Handle needs
+			for (need_name in this.needs) {
+				var need = this.needs[need_name];
+				need.value += need.speed;
+				if (need.value >= 100) {
+					this.die();
+					return;
+				}
+			}
+		};
+
+		this.die = function() {
+			rtge.removeObject(this);
+			rtge.addObject(new InGame.DeadHen(this));
 		};
 
 		this.updateDirection = function() {
@@ -100,5 +125,23 @@ var InGame = {
 			}
 			return {x: direction.x * intensity, y: direction.y * intensity};
 		};
-	}
+	},
+
+	DeadHen: function(hen) {
+		rtge.DynObject.call(this);
+		this.x = hen.x;
+		this.y = hen.y;
+		this.anchorX = 50;
+		this.anchorY = 90;
+		this.animation = 'ingame.hen.dead';
+
+		this.speed = 0.3;
+
+		this.tick = function(timeElapsed) {
+			this.y -= this.speed * timeElapsed;
+			if (this.y < -10) {
+				rtge.removeObject(this);
+			}
+		};
+	},
 };

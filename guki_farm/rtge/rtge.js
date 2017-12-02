@@ -436,9 +436,6 @@ var rtge = {
 	},
 	
 	canvasMoveInteraction: function(pos) {
-		// Moving forbids clicking
-		rtge.canClick = false;
-
 		// Inform dynamic objects
 		var world_pos = rtge.canvasPosToWorldPos(pos);
 		for (i = rtge.state.objects.length - 1; i >= 0; --i) {

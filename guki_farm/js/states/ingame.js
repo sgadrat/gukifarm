@@ -96,7 +96,7 @@ var InGame = {
 
 		// Initialization logic
 		rtge.state.terrain = 'img/bg.png';
-		for (var i = 0; i < 100; ++i) {
+		for (var i = 0; i < 5; ++i) {
 			rtge.addObject(new InGame.Hen(600, 500, this));
 		}
 	},
@@ -291,6 +291,7 @@ var InGame = {
 		rtge.DynObject.call(this);
 		this.x = hen.x + x;
 		this.y = hen.y + y;
+		this.z = 1;
 		this.anchorX = 15;
 		this.anchorY = 15;
 		this.animation = animation;
@@ -350,7 +351,7 @@ var InGame = {
 		rtge.DynObject.call(this);
 		this.x = action_circle.x + x;
 		this.y = action_circle.y + y;
-		this.z = 1;
+		this.z = 2;
 		this.anchorX = 50;
 		this.anchorY = 50;
 		this.animation = animation;

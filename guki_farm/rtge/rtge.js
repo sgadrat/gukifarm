@@ -182,7 +182,7 @@ var rtge = {
 
 	update: function() {
 		var begin = Date.now();
-		var timeDiff = begin - rtge.lastUpdate;
+		var timeDiff = Math.min(40, begin - rtge.lastUpdate);
 		if (rtge.globalTick != null) {
 			rtge.globalTick(timeDiff);
 		}

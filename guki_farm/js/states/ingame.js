@@ -135,9 +135,6 @@ var InGame = {
 
 		// Methods
 		this.tick = function(timeElapsed) {
-			// Avoid huges steps (easily done by tab-switching)
-			timeElapsed = Math.min(timeElapsed, 40);
-
 			// Move the Hen
 			switch (this.state.name) {
 				case 'walking':

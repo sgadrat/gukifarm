@@ -98,6 +98,7 @@ var InGame = {
 			}
 
 			this.focused_hen.startEating();
+			this.removeActionCircle();
 		};
 
 		// Initialization logic
@@ -161,6 +162,27 @@ var InGame = {
 					return;
 				}
 			}
+			if (this.preemptiveNeeds()) {
+				this.showNeeds();
+			}
+		};
+
+		this.preemptiveNeeds = function() {
+			if (this.scene.focused_hen === this) {
+				return true;
+			}
+
+			if (this.state.name == 'eating') {
+				return true;
+			}
+
+			for (var need_name in this.needs) {
+				if (this.needs[need_name].value >= 75) {
+					return true;
+				}
+			}
+
+			return false;
 		};
 
 		this.click = function() {
@@ -173,7 +195,7 @@ var InGame = {
 		};
 
 		this.mouseNotOver = function(mouse_pos) {
-			if (this.scene.focused_hen !== this) {
+			if (! this.preemptiveNeeds()) {
 				this.hideNeeds();
 			}
 		};
@@ -227,8 +249,8 @@ var InGame = {
 			var flee_fence = this.getFleeFenceDirection();
 
 			this.direction = Utils.normalize({
-				x: momentum.x*1 + random.x*0.5 + flee_fence.x*1,
-				y: momentum.y*1 + random.y*0.5 + flee_fence.y*1
+				x: momentum.x*1 + random.x*0.2 + flee_fence.x*1,
+				y: momentum.y*1 + random.y*0.2 + flee_fence.y*1
 			});
 		};
 

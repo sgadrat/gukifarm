@@ -7,8 +7,10 @@ var InGame = {
 			'img/hen.png',
 			'img/hen_dead.png',
 			'img/hen_eat.png',
+			'img/loot_hen.png',
 			'img/lower_fence.png',
 			'img/need_icons_eat.png',
+			'img/treasure.png',
 		];
 	},
 
@@ -24,6 +26,16 @@ var InGame = {
 		action_circle.steps = ['img/action_circle.png'];
 		action_circle.durations = [600000];
 		animations['ingame.action.circle'] = action_circle;
+
+		var gui_treasure = new rtge.Animation();
+		gui_treasure.steps = ['img/treasure.png'];
+		gui_treasure.durations = [600000];
+		animations['ingame.gui.treasure'] = gui_treasure;
+
+		var loot_hen = new rtge.Animation();
+		loot_hen.steps = ['img/loot_hen.png'];
+		loot_hen.durations = [600000];
+		animations['ingame.loot.hen'] = loot_hen;
 
 		var lower_fence = new rtge.Animation();
 		lower_fence.steps = ['img/lower_fence.png'];
@@ -57,9 +69,48 @@ var InGame = {
 		// Data
 		this.action_circle = null;
 		this.focused_hen = null;
+		this.treasures = [];
+		this.treasure_cooldown = 5000;
+		this.possible_loot = [
+			{
+				range: {min: 0, max: 100},
+				animation: 'ingame.loot.hen',
+				process: function(scene) {
+					rtge.addObject(new InGame.Hen(600, 500, scene));
+				},
+			}
+		];
 
 		// Methods
 		this.tick = function(timeElapsed) {
+			this.treasure_cooldown -= timeElapsed;
+			if (this.treasure_cooldown <= 0) {
+				this.placeTreasure();
+				this.treasure_cooldown = 4000 + Math.random() * 2000;
+			}
+		};
+
+		this.placeTreasure = function() {
+			var treasure = new InGame.Treasure(this, 1860/2 - 200/2, 1080/2 - 200/2);
+			rtge.addObject(treasure);
+			this.treasures.push(treasure);
+			this.repositionTreasures();
+		};
+
+		this.openTreasure = function(treasure) {
+			for (var treasure_idx = 0; treasure_idx < this.treasures.length; ++treasure_idx) {
+				if (this.treasures[treasure_idx] === treasure) {
+					var loot = this.possible_loot[0];
+					rtge.addObject(new InGame.LootMessage(this, treasure_idx, loot.animation, loot.process));
+					break;
+				}
+			}
+		};
+
+		this.repositionTreasures = function() {
+			for (var treasure_idx = 0; treasure_idx < this.treasures.length; ++treasure_idx) {
+				this.treasures[treasure_idx].goTo({x: (treasure_idx % 9) * 210, y: 870 - (Math.floor(treasure_idx / 9) * 250)});
+			}
 		};
 
 		this.worldClick = function(x, y) {
@@ -396,6 +447,76 @@ var InGame = {
 
 		this.click = function() {
 			this.callback();
+		};
+	},
+
+	Treasure: function(scene, x, y) {
+		rtge.DynObject.call(this);
+		this.x = x;
+		this.y = y;
+		this.z = 200;
+		this.animation = 'ingame.gui.treasure';
+
+		this.destination = null;
+		this.speed = 2;
+		this.scene = scene;
+
+		this.click = function() {
+			if (this.destination == null) {
+				this.scene.openTreasure(this);
+			}
+		};
+
+		this.tick = function(timeElapsed) {
+			if (this.destination != null) {
+				var trip = {
+					x: this.destination.x - this.x,
+					y: this.destination.y - this.y
+				};
+				var direction = Utils.normalize(trip);
+				var movement = {
+					x: direction.x * this.speed * timeElapsed,
+					y: direction.y * this.speed * timeElapsed
+				};
+
+				if (Math.abs(movement.x) <= Math.abs(trip.x)) {
+					this.x += movement.x;
+				}else {
+					this.x = this.destination.x;
+				}
+				if (Math.abs(movement.y) <= Math.abs(trip.y)) {
+					this.y += movement.y;
+				}else {
+					this.y = this.destination.y;
+				}
+
+				if (this.x == this.destination.x && this.y == this.destination.y) {
+					this.destination = null;
+				}
+			}
+		};
+
+		this.goTo = function(destination) {
+			this.destination = destination;
+		};
+	},
+
+	LootMessage: function(scene, treasure_idx, animation, callback) {
+		rtge.DynObject.call(this);
+		this.z = 1000;
+		this.animation = animation;
+
+		this.scene = scene;
+		this.callback = callback;
+
+		this.click = function() {
+			rtge.removeObject(scene.treasures[treasure_idx]);
+			scene.treasures.splice(treasure_idx, 1);
+			scene.repositionTreasures();
+
+			rtge.removeObject(this);
+
+			this.callback(scene);
 		};
 	},
 };

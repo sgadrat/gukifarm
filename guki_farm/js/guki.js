@@ -33,10 +33,10 @@ var Guki = {
 	},
 
 	debugOverlay: function() {
-		var fence_nw = {a: .58, b: 1, c: -535};
-		var fence_ne = {a: -.58, b: 1, c: 535};
-		var fence_se = {a: .58, b: 1, c: -535*3};
-		var fence_sw = {a: -.58, b: 1, c: -535};
+		var fence_nw = {a: .58, b: 1, c: -670};
+		var fence_ne = {a: -.58, b: 1, c: 399};
+		var fence_se = {a: .58, b: 1, c: -1569};
+		var fence_sw = {a: -.58, b: 1, c: -496};
 
 		for (var x = 0; x < 1860; ++x) {
 			for (var y = 0; y < 1080; ++y) {

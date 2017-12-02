@@ -7,6 +7,7 @@ var InGame = {
 			'img/hen.png',
 			'img/hen_dead.png',
 			'img/hen_eat.png',
+			'img/lower_fence.png',
 			'img/need_icons_eat.png',
 		];
 	},
@@ -23,6 +24,11 @@ var InGame = {
 		action_circle.steps = ['img/action_circle.png'];
 		action_circle.durations = [600000];
 		animations['ingame.action.circle'] = action_circle;
+
+		var lower_fence = new rtge.Animation();
+		lower_fence.steps = ['img/lower_fence.png'];
+		lower_fence.durations = [600000];
+		animations['ingame.environment.lower_fence'] = lower_fence;
 
 		var hen_idle = new rtge.Animation();
 		hen_idle.steps = ['img/hen.png'];
@@ -96,6 +102,10 @@ var InGame = {
 
 		// Initialization logic
 		rtge.state.terrain = 'img/bg.png';
+		var lower_fence = new rtge.DynObject();
+		lower_fence.animation = 'ingame.environment.lower_fence';
+		lower_fence.z = 99;
+		rtge.addObject(lower_fence);
 		for (var i = 0; i < 5; ++i) {
 			rtge.addObject(new InGame.Hen(600, 500, this));
 		}
@@ -234,10 +244,10 @@ var InGame = {
 			//  Isometric use 30° lines, so it makes for equation
 			//  "y = tan(30)*x + c" for a growing line, "y = -tan(30)*x + c"
 			//  for a declining line. "c" being the "y" value for the point at "x = 0".
-			var fence_nw = {a: .58, b: 1, c: -535};
-			var fence_ne = {a: -.58, b: 1, c: 535};
-			var fence_se = {a: .58, b: 1, c: -535*3};
-			var fence_sw = {a: -.58, b: 1, c: -535};
+			var fence_nw = {a: .58, b: 1, c: -670};
+			var fence_ne = {a: -.58, b: 1, c: 399};
+			var fence_se = {a: .58, b: 1, c: -1569};
+			var fence_sw = {a: -.58, b: 1, c: -496};
 
 			var direction = Utils.normalize({
 				x:
@@ -291,7 +301,7 @@ var InGame = {
 		rtge.DynObject.call(this);
 		this.x = hen.x + x;
 		this.y = hen.y + y;
-		this.z = 1;
+		this.z = 100;
 		this.anchorX = 15;
 		this.anchorY = 15;
 		this.animation = animation;
@@ -327,7 +337,7 @@ var InGame = {
 		rtge.DynObject.call(this);
 		this.x = hen.x;
 		this.y = hen.y - 40;
-		this.z = 1;
+		this.z = 101;
 		this.anchorX = 250;
 		this.anchorY = 250;
 		this.animation = 'ingame.action.circle';
@@ -351,7 +361,7 @@ var InGame = {
 		rtge.DynObject.call(this);
 		this.x = action_circle.x + x;
 		this.y = action_circle.y + y;
-		this.z = 2;
+		this.z = 102;
 		this.anchorX = 50;
 		this.anchorY = 50;
 		this.animation = animation;

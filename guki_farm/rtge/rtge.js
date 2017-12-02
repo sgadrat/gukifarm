@@ -201,7 +201,7 @@ var rtge = {
 
 	render: function() {
 		// Black background
-		rtge.canvasCtx.fillStyle = '#000000';
+		rtge.canvasCtx.fillStyle = '#ffffff';
 		rtge.canvasCtx.fillRect(0, 0, rtge.canvas.width, rtge.canvas.height);
 
 		// Map

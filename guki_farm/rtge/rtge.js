@@ -93,6 +93,9 @@ var rtge = {
 		if ('globalTick' in callbacks) {
 			rtge.globalTick = callbacks.globalTick;
 		}
+		if ('postRender' in callbacks) {
+			rtge.postRender = callbacks.postRender;
+		}
 
 		// Add needed images to preloads
 		var i;
@@ -243,6 +246,11 @@ var rtge = {
 				}
 				rtge.canvasCtx.drawImage(stateImg, pos.x, pos.y, rtge.rpxToPx(elem.width), rtge.rpxToPx(elem.height));
 			}
+		}
+
+		// Overlay
+		if (rtge.postRender != null) {
+			rtge.postRender();
 		}
 	},
 
@@ -663,6 +671,10 @@ var rtge = {
 	// Function called before updating the state
 	// takes one number as parameter (the number of milliseconds since the last tick)
 	globalTick: null,
+
+	// Function called after all rendering
+	// takes no parameter
+	postRender: null,
 
 	// True when the next mouseUp event is a click
 	canClick: false,

@@ -23,6 +23,7 @@ var Title = {
 
 		this.worldClick = function(x, y) {
 			Guki.changeState('ingame');
+			document.getElementById('btn_click').play();
 		};
 
 		// Initialization logic

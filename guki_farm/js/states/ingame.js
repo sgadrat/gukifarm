@@ -10,6 +10,7 @@ var InGame = {
 			'img/loot_love.png',
 			'img/lower_fence.png',
 			'img/treasure.png',
+			'img/treasure_open.png',
 		];
 
 		for (var frame_num = 0; frame_num < 9; ++frame_num) {
@@ -63,7 +64,12 @@ var InGame = {
 		var gui_treasure = new rtge.Animation();
 		gui_treasure.steps = ['img/treasure.png'];
 		gui_treasure.durations = [600000];
-		animations['ingame.gui.treasure'] = gui_treasure;
+		animations['ingame.gui.treasure.closed'] = gui_treasure;
+
+		var gui_treasure_open = new rtge.Animation();
+		gui_treasure_open.steps = ['img/treasure_open.png'];
+		gui_treasure_open.durations = [600000];
+		animations['ingame.gui.treasure.open'] = gui_treasure_open;
 
 		var loot_types = ['hen', 'love', 'hygiene', 'fun'];
 		for (var loot_idx = 0; loot_idx < loot_types.length; ++loot_idx) {
@@ -246,7 +252,14 @@ var InGame = {
 							break;
 						}
 					}
+
 					rtge.addObject(new InGame.LootMessage(this, treasure_idx, loot.animation, loot.process));
+					treasure.animation = 'ingame.gui.treasure.open';
+					treasure.anchorX = 0;
+					treasure.anchorY = 0;
+
+					document.getElementById('loot_box_open').play();
+
 					break;
 				}
 			}
@@ -254,7 +267,7 @@ var InGame = {
 
 		this.repositionTreasures = function() {
 			for (var treasure_idx = 0; treasure_idx < this.treasures.length; ++treasure_idx) {
-				this.treasures[treasure_idx].goTo({x: (treasure_idx % 9) * 210, y: 870 - (Math.floor(treasure_idx / 9) * 250)});
+				this.treasures[treasure_idx].goTo({x: (treasure_idx % 9) * 200, y: 870 - (Math.floor(treasure_idx / 9) * 210)});
 			}
 		};
 
@@ -272,6 +285,8 @@ var InGame = {
 				rtge.addObject(this.action_circle.btns[btn_idx]);
 			}
 			this.focused_hen = hen;
+
+			document.getElementById('menu_open').play();
 		};
 
 		this.removeActionCircle = function() {
@@ -685,6 +700,7 @@ var InGame = {
 
 		this.click = function() {
 			this.callback();
+			document.getElementById('btn_click').play();
 		};
 	},
 
@@ -693,7 +709,9 @@ var InGame = {
 		this.x = x;
 		this.y = y;
 		this.z = 200;
-		this.animation = 'ingame.gui.treasure';
+		this.anchorX = -59;
+		this.anchorY = -36;
+		this.animation = 'ingame.gui.treasure.closed';
 
 		this.destination = null;
 		this.speed = 2;

@@ -6,8 +6,6 @@ var InGame = {
 			'img/bg.png',
 			'img/hen_cleaning.png',
 			'img/hen_dead.png',
-			'img/hen_eating.png',
-			'img/hen_loving.png',
 			'img/hen_playing.png',
 			'img/loot_fun.png',
 			'img/loot_hen.png',
@@ -28,6 +26,7 @@ var InGame = {
 				graphics.push('img/hen/walking/right/frame_' + frame_num + '.png');
 				graphics.push('img/hen/walking/left/frame_' + frame_num + '.png');
 				graphics.push('img/hen/poping/frame_' + frame_num + '.png');
+				graphics.push('img/hen/loving/frame_' + frame_num + '.png');
 			}
 		}
 
@@ -71,7 +70,7 @@ var InGame = {
 		hen_dead.durations = [600000];
 		animations['ingame.hen.dead'] = hen_dead;
 
-		var hen_emotes = ['loving', 'cleaning', 'playing'];
+		var hen_emotes = ['cleaning', 'playing'];
 		for (var emote_idx = 0; emote_idx < hen_emotes.length; ++emote_idx) {
 			var emote_name = hen_emotes[emote_idx];
 			var hen_anim = new rtge.Animation();
@@ -80,19 +79,22 @@ var InGame = {
 			animations['ingame.hen.'+emote_name] = hen_anim;
 		}
 
-		var hen_poping = new rtge.Animation();
-		for (var frame_num = 0; frame_num < 8; ++frame_num) {
-			hen_poping.steps.push('img/hen/poping/frame_'+ frame_num +'.png');
-			hen_poping.durations.push(160);
+		var hen_emotes = [
+			{name:'eating', size:9, rate:40*6},
+			{name:'loving', size:8, rate:160},
+			{name:'poping', size:8, rate:160},
+		];
+		for (var emote_idx = 0; emote_idx < hen_emotes.length; ++emote_idx) {
+			var emote_name = hen_emotes[emote_idx].name;
+			var emote_size = hen_emotes[emote_idx].size;
+			var emote_rate = hen_emotes[emote_idx].rate;
+			var anim = new rtge.Animation();
+			for (var frame_num = 0; frame_num < emote_size; ++frame_num) {
+				anim.steps.push('img/hen/'+ emote_name +'/frame_'+ frame_num +'.png');
+				anim.durations.push(emote_rate);
+			}
+			animations['ingame.hen.'+ emote_name] = anim;
 		}
-		animations['ingame.hen.poping'] = hen_poping;
-
-		var hen_eating = new rtge.Animation();
-		for (var frame_num = 0; frame_num < 9; ++frame_num) {
-			hen_eating.steps.push('img/hen/eating/frame_'+ frame_num +'.png');
-			hen_eating.durations.push(40*6);
-		}
-		animations['ingame.hen.eating'] = hen_eating;
 
 		var need_eat = new rtge.Animation();
 		need_eat.steps = ['img/need_icons_eat.png'];
@@ -270,6 +272,9 @@ var InGame = {
 				rtge.removeObject(this.action_circle.btns[btn_idx]);
 			}
 
+			if (this.focused_hen != null) {
+				this.focused_hen.hideNeeds();
+			}
 			this.action_circle = null;
 			this.focused_hen = null;
 		};
@@ -387,10 +392,6 @@ var InGame = {
 				return true;
 			}
 
-			if (this.state.name == 'emote' && this.animation != 'ingame.hen.poping') {
-				return true;
-			}
-
 			for (var need_name in this.needs) {
 				if (this.needs[need_name].value >= 75) {
 					return true;
@@ -452,7 +453,7 @@ var InGame = {
 		};
 
 		this.startLoving = function() {
-			this.state = {name: 'emote', counter: 1000};
+			this.state = {name: 'emote', counter: 1280};
 			this.animation = 'ingame.hen.loving';
 			this.animationPosition = 0;
 			this.needs['love'].value = 0;

@@ -10,8 +10,15 @@ var Title = {
 	},
 
 	State: function() {
+		// Data
+		this.firstTime = true;
+
 		// Methods
 		this.tick = function(timeElapsed) {
+			if (this.firstTime) {
+				this.firstTime = false;
+				document.getElementById('music').play();
+			}
 		};
 
 		this.worldClick = function(x, y) {

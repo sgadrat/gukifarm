@@ -1,10 +1,9 @@
 var InGame = {
 	getGraphics: function() {
-		return [
+		var graphics = [
 			'img/action_btn_feed.png',
 			'img/action_circle.png',
 			'img/bg.png',
-			'img/hen.png',
 			'img/hen_cleaning.png',
 			'img/hen_dead.png',
 			'img/hen_eating.png',
@@ -18,6 +17,19 @@ var InGame = {
 			'img/need_icons_eat.png',
 			'img/treasure.png',
 		];
+
+		for (var frame_num = 0; frame_num < 9; ++frame_num) {
+			if (frame_num < 9) {
+				graphics.push('img/hen/walking/bot/frame_' + frame_num + '.png');
+				graphics.push('img/hen/walking/top/frame_' + frame_num + '.png');
+			}
+			if (frame_num < 8) {
+				graphics.push('img/hen/walking/right/frame_' + frame_num + '.png');
+				graphics.push('img/hen/walking/left/frame_' + frame_num + '.png');
+			}
+		}
+
+		return graphics;
 	},
 
 	getAnimations: function() {
@@ -52,11 +64,6 @@ var InGame = {
 		lower_fence.durations = [600000];
 		animations['ingame.environment.lower_fence'] = lower_fence;
 
-		var hen_idle = new rtge.Animation();
-		hen_idle.steps = ['img/hen.png'];
-		hen_idle.durations = [600000];
-		animations['ingame.hen.idle'] = hen_idle;
-
 		var hen_dead = new rtge.Animation();
 		hen_dead.steps = ['img/hen_dead.png'];
 		hen_dead.durations = [600000];
@@ -75,6 +82,30 @@ var InGame = {
 		need_eat.steps = ['img/need_icons_eat.png'];
 		need_eat.durations = [600000];
 		animations['ingame.need_icons.eat'] = need_eat;
+
+		var directions = ['top', 'bot'];
+		for (var direction_idx = 0; direction_idx < directions.length; ++direction_idx) {
+			var direction = directions[direction_idx];
+			var anim = new rtge.Animation();
+			for (var frame_num = 0; frame_num < 9; ++frame_num) {
+				var img_path = 'img/hen/walking/'+ direction +'/frame_'+ frame_num +'.png';
+				anim.steps.push(img_path);
+				anim.durations.push(40*6);
+			}
+			animations['ingame.hen.walking.'+ direction] = anim;
+		}
+
+		directions = ['left', 'right'];
+		for (var direction_idx = 0; direction_idx < directions.length; ++direction_idx) {
+			var direction = directions[direction_idx];
+			var anim = new rtge.Animation();
+			for (var frame_num = 0; frame_num < 8; ++frame_num) {
+				var img_path = 'img/hen/walking/'+ direction +'/frame_'+ frame_num +'.png';
+				anim.steps.push(img_path);
+			}
+			anim.durations = [4*40, 5*40, 5*40, 8*40, 8*40, 4*40, 4*40];
+			animations['ingame.hen.walking.'+direction] = anim;
+		}
 
 		return animations;
 	},
@@ -106,7 +137,7 @@ var InGame = {
 				},
 			},
 			{
-				max_range: 50,
+				max_range: 8.5,
 				name: 'fun',
 				animation: 'ingame.loot.fun',
 				process: function(scene) {
@@ -125,7 +156,7 @@ var InGame = {
 				},
 			},
 			{
-				max_range: 50,
+				max_range: 10,
 				name: 'hygiene',
 				animation: 'ingame.loot.hygiene',
 				process: function(scene) {
@@ -281,7 +312,7 @@ var InGame = {
 		this.y = y;
 		this.anchorX = 50;
 		this.anchorY = 90;
-		this.animation = 'ingame.hen.idle';
+		this.animation = 'ingame.hen.walking.right';
 
 		this.direction = {x: 1, y: 0};
 		this.speed = 0.1;
@@ -306,6 +337,7 @@ var InGame = {
 			// Move the Hen
 			switch (this.state.name) {
 				case 'walking':
+					this.state.direction_change_cd = Math.max(0, this.state.direction_change_cd - timeElapsed);
 					this.updateDirection();
 					this.x += this.direction.x * this.speed * timeElapsed;
 					this.y += this.direction.y * this.speed * timeElapsed;
@@ -392,8 +424,8 @@ var InGame = {
 		};
 
 		this.startWalking = function() {
-			this.animation = 'ingame.hen.idle';
-			this.state = {name: 'walking'};
+			this.state = {name: 'walking', direction_change_cd: 0};
+			this.updateWalkingAnimation();
 		};
 
 		this.startEating = function() {
@@ -439,6 +471,26 @@ var InGame = {
 				x: momentum.x*1 + random.x*0.2 + flee_fence.x*1,
 				y: momentum.y*1 + random.y*0.2 + flee_fence.y*1
 			});
+
+			this.updateWalkingAnimation();
+		};
+
+		this.updateWalkingAnimation = function() {
+			if (this.state.name == 'walking' && this.state.direction_change_cd <= 0) {
+				this.state.direction_change_cd = 100;
+
+				var direction_name = null;
+				if (Math.abs(this.direction.x) > Math.abs(this.direction.y)) {
+					direction_name = (this.direction.x < 0 ? 'left' : 'right');
+				}else {
+					direction_name = (this.direction.y < 0 ? 'top' : 'bot');
+				}
+				var animation_name = 'ingame.hen.walking.'+direction_name;
+				if (animation_name != this.animation) {
+					this.animation = animation_name;
+					this.animationPosition = 0;
+				}
+			}
 		};
 
 		this.getRandomDirection = function() {

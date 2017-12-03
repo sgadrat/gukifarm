@@ -22,6 +22,7 @@ var InGame = {
 			if (frame_num < 9) {
 				graphics.push('img/hen/walking/bot/frame_' + frame_num + '.png');
 				graphics.push('img/hen/walking/top/frame_' + frame_num + '.png');
+				graphics.push('img/hen/eating/frame_' + frame_num + '.png');
 			}
 			if (frame_num < 8) {
 				graphics.push('img/hen/walking/right/frame_' + frame_num + '.png');
@@ -70,7 +71,7 @@ var InGame = {
 		hen_dead.durations = [600000];
 		animations['ingame.hen.dead'] = hen_dead;
 
-		var hen_emotes = ['eating', 'loving', 'cleaning', 'playing'];
+		var hen_emotes = ['loving', 'cleaning', 'playing'];
 		for (var emote_idx = 0; emote_idx < hen_emotes.length; ++emote_idx) {
 			var emote_name = hen_emotes[emote_idx];
 			var hen_anim = new rtge.Animation();
@@ -85,6 +86,13 @@ var InGame = {
 			hen_poping.durations.push(160);
 		}
 		animations['ingame.hen.poping'] = hen_poping;
+
+		var hen_eating = new rtge.Animation();
+		for (var frame_num = 0; frame_num < 9; ++frame_num) {
+			hen_eating.steps.push('img/hen/eating/frame_'+ frame_num +'.png');
+			hen_eating.durations.push(40*6);
+		}
+		animations['ingame.hen.eating'] = hen_eating;
 
 		var need_eat = new rtge.Animation();
 		need_eat.steps = ['img/need_icons_eat.png'];
@@ -437,7 +445,7 @@ var InGame = {
 		};
 
 		this.startEating = function() {
-			this.state = {name: 'emote', counter: 1000};
+			this.state = {name: 'emote', counter: 2160};
 			this.animation = 'ingame.hen.eating';
 			this.animationPosition = 0;
 			this.needs['food'].value = 0;

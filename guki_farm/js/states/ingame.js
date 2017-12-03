@@ -187,7 +187,7 @@ var InGame = {
 				name: 'hen',
 				animation: 'ingame.loot.hen',
 				process: function(scene) {
-					rtge.addObject(new InGame.Hen(600, 500, scene));
+					rtge.addObject(new InGame.Hen(scene));
 				},
 			},
 		];
@@ -308,16 +308,16 @@ var InGame = {
 		lower_fence.animation = 'ingame.environment.lower_fence';
 		lower_fence.z = 99;
 		rtge.addObject(lower_fence);
-		for (var i = 0; i < 5; ++i) {
-			rtge.addObject(new InGame.Hen(600, 500, this));
+		for (var i = 0; i < 3; ++i) {
+			rtge.addObject(new InGame.Hen(this));
 		}
 	},
 
-	Hen: function(x, y, scene) {
+	Hen: function(scene) {
 		// Data
 		rtge.DynObject.call(this);
-		this.x = x;
-		this.y = y;
+		this.x = 528 + Math.random() * 798;
+		this.y = 398 + Math.random() * 366;
 		this.anchorX = 50;
 		this.anchorY = 90;
 		this.animation = 'ingame.hen.walking.right';

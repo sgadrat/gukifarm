@@ -544,11 +544,11 @@ var InGame = {
 		rtge.DynObject.call(this);
 		this.x = hen.x;
 		this.y = hen.y;
-		this.anchorX = 50;
-		this.anchorY = 90;
+		this.anchorX = 57;
+		this.anchorY = 91;
 		this.animation = 'ingame.hen.dead';
 
-		this.speed = 0.3;
+		this.speed = 0.25;
 
 		this.tick = function(timeElapsed) {
 			this.y -= this.speed * timeElapsed;

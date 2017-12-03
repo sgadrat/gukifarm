@@ -10,7 +10,6 @@ var InGame = {
 			'img/loot_hygiene.png',
 			'img/loot_love.png',
 			'img/lower_fence.png',
-			'img/need_icons_eat.png',
 			'img/treasure.png',
 		];
 
@@ -30,6 +29,11 @@ var InGame = {
 				graphics.push('img/hen/cleaning/frame_' + frame_num + '.png');
 				graphics.push('img/hen/playing/frame_' + frame_num + '.png');
 			}
+		}
+
+		var needs = ['food', 'hygiene', 'fun', 'love'];
+		for (var need_idx = 0; need_idx < needs.length; ++need_idx) {
+			graphics.push('img/need_icons_'+ needs[need_idx] +'.png');
 		}
 
 		return graphics;
@@ -89,10 +93,15 @@ var InGame = {
 			animations['ingame.hen.'+ emote.name] = anim;
 		}
 
-		var need_eat = new rtge.Animation();
-		need_eat.steps = ['img/need_icons_eat.png'];
-		need_eat.durations = [600000];
-		animations['ingame.need_icons.eat'] = need_eat;
+		var needs = ['food', 'hygiene', 'fun', 'love'];
+		for (var need_idx = 0; need_idx < needs.length; ++need_idx) {
+			var need_name = needs[need_idx];
+
+			var need_icon_anim = new rtge.Animation();
+			need_icon_anim.steps = ['img/need_icons_'+ need_name +'.png'];
+			need_icon_anim.durations = [600000];
+			animations['ingame.need_icons.'+ need_name] = need_icon_anim;
+		}
 
 		var directions = ['top', 'bot'];
 		for (var direction_idx = 0; direction_idx < directions.length; ++direction_idx) {
@@ -129,7 +138,7 @@ var InGame = {
 		this.treasure_cooldown = 5000;
 		this.possible_loot = [
 			{
-				max_range: 7,
+				max_range: 100,
 				name: 'love',
 				animation: 'ingame.loot.love',
 				process: function(scene) {
@@ -148,7 +157,7 @@ var InGame = {
 				},
 			},
 			{
-				max_range: 8.5,
+				max_range: 100,
 				name: 'fun',
 				animation: 'ingame.loot.fun',
 				process: function(scene) {
@@ -167,7 +176,7 @@ var InGame = {
 				},
 			},
 			{
-				max_range: 10,
+				max_range: 100,
 				name: 'hygiene',
 				animation: 'ingame.loot.hygiene',
 				process: function(scene) {
@@ -337,10 +346,10 @@ var InGame = {
 			'fun': {value: 0, speed: .04},
 		};
 		this.needIcons = {
-			'food': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'food', -15, -40-15),
-			'love': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'love', 15, -40-15),
-			'hygiene': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'hygiene', -15, -40+15),
-			'fun': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'fun', 15, -40+15),
+			'food': new InGame.NeedIcon(this, 'ingame.need_icons.food', 'food', -15, -40-15),
+			'love': new InGame.NeedIcon(this, 'ingame.need_icons.love', 'love', 15, -40-15),
+			'hygiene': new InGame.NeedIcon(this, 'ingame.need_icons.hygiene', 'hygiene', -15, -40+15),
+			'fun': new InGame.NeedIcon(this, 'ingame.need_icons.fun', 'fun', 15, -40+15),
 		};
 		this.needIconsAppearing = false;
 		this.scene = scene;

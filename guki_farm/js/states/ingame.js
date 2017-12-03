@@ -5,10 +5,14 @@ var InGame = {
 			'img/action_circle.png',
 			'img/bg.png',
 			'img/hen.png',
+			'img/hen_cleaning.png',
 			'img/hen_dead.png',
 			'img/hen_eating.png',
 			'img/hen_loving.png',
+			'img/hen_playing.png',
+			'img/loot_fun.png',
 			'img/loot_hen.png',
+			'img/loot_hygiene.png',
 			'img/loot_love.png',
 			'img/lower_fence.png',
 			'img/need_icons_eat.png',
@@ -34,7 +38,7 @@ var InGame = {
 		gui_treasure.durations = [600000];
 		animations['ingame.gui.treasure'] = gui_treasure;
 
-		var loot_types = ['hen', 'love'];
+		var loot_types = ['hen', 'love', 'hygiene', 'fun'];
 		for (var loot_idx = 0; loot_idx < loot_types.length; ++loot_idx) {
 			var loot_type = loot_types[loot_idx];
 			var loot_anim = new rtge.Animation();
@@ -58,7 +62,7 @@ var InGame = {
 		hen_dead.durations = [600000];
 		animations['ingame.hen.dead'] = hen_dead;
 
-		var hen_emotes = ['eating', 'loving'];
+		var hen_emotes = ['eating', 'loving', 'cleaning', 'playing'];
 		for (var emote_idx = 0; emote_idx < hen_emotes.length; ++emote_idx) {
 			var emote_name = hen_emotes[emote_idx];
 			var hen_anim = new rtge.Animation();
@@ -83,7 +87,7 @@ var InGame = {
 		this.treasure_cooldown = 5000;
 		this.possible_loot = [
 			{
-				max_range: 10,
+				max_range: 7,
 				name: 'love',
 				animation: 'ingame.loot.love',
 				process: function(scene) {
@@ -95,6 +99,44 @@ var InGame = {
 					// Never re-loot this item
 					for (var loot_idx = 0; loot_idx < scene.possible_loot.length; ++loot_idx) {
 						if (scene.possible_loot[loot_idx].name == 'love') {
+							scene.possible_loot.splice(loot_idx, 1);
+							break;
+						}
+					}
+				},
+			},
+			{
+				max_range: 50,
+				name: 'fun',
+				animation: 'ingame.loot.fun',
+				process: function(scene) {
+					// Activate love need
+					if (scene.activeNeeds.indexOf('fun') == -1) {
+						scene.addNeed('fun');
+					}
+
+					// Never re-loot this item
+					for (var loot_idx = 0; loot_idx < scene.possible_loot.length; ++loot_idx) {
+						if (scene.possible_loot[loot_idx].name == 'fun') {
+							scene.possible_loot.splice(loot_idx, 1);
+							break;
+						}
+					}
+				},
+			},
+			{
+				max_range: 50,
+				name: 'hygiene',
+				animation: 'ingame.loot.hygiene',
+				process: function(scene) {
+					// Activate love need
+					if (scene.activeNeeds.indexOf('hygiene') == -1) {
+						scene.addNeed('hygiene');
+					}
+
+					// Never re-loot this item
+					for (var loot_idx = 0; loot_idx < scene.possible_loot.length; ++loot_idx) {
+						if (scene.possible_loot[loot_idx].name == 'hygiene') {
 							scene.possible_loot.splice(loot_idx, 1);
 							break;
 						}
@@ -185,12 +227,30 @@ var InGame = {
 			this.focused_hen = null;
 		};
 
+		this.actionClean = function() {
+			if (this.focused_hen == null) {
+				return;
+			}
+
+			this.focused_hen.startCleaning();
+			this.removeActionCircle();
+		}
+
 		this.actionFeed = function() {
 			if (this.focused_hen == null) {
 				return;
 			}
 
 			this.focused_hen.startEating();
+			this.removeActionCircle();
+		};
+
+		this.actionFun = function() {
+			if (this.focused_hen == null) {
+				return;
+			}
+
+			this.focused_hen.startPlaying();
 			this.removeActionCircle();
 		};
 
@@ -228,10 +288,14 @@ var InGame = {
 		this.needs = {
 			'food': {value: 0, speed: .1},
 			'love': {value: 0, speed: .05},
+			'hygiene': {value: 0, speed: .01},
+			'fun': {value: 0, speed: .04},
 		};
 		this.needIcons = {
 			'food': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'food', -15, -40-15),
 			'love': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'love', 15, -40-15),
+			'hygiene': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'hygiene', -15, -40+15),
+			'fun': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'fun', 15, -40+15),
 		};
 		this.needIconsAppearing = false;
 		this.scene = scene;
@@ -342,6 +406,18 @@ var InGame = {
 			this.state = {name: 'emote', counter: 1000};
 			this.animation = 'ingame.hen.loving';
 			this.needs['love'].value = 0;
+		};
+
+		this.startPlaying = function() {
+			this.state = {name: 'emote', counter: 1000};
+			this.animation = 'ingame.hen.playing';
+			this.needs['fun'].value = 0;
+		};
+
+		this.startCleaning = function() {
+			this.state = {name: 'emote', counter: 1000};
+			this.animation = 'ingame.hen.cleaning';
+			this.needs['hygiene'].value = 0;
 		};
 
 		this.die = function() {
@@ -486,10 +562,10 @@ var InGame = {
 			this.btns.push(new InGame.ActionBtn(this, 150, 0, 'ingame.action.btns.feed', function() {scene.actionHug();}));
 		}
 		if (scene.activeNeeds.indexOf('hygiene') > -1) {
-			this.btns.push(new InGame.ActionBtn(this, 0, 150, 'ingame.action.btns.feed', function() {scene.actionFeed();}));
+			this.btns.push(new InGame.ActionBtn(this, 0, 150, 'ingame.action.btns.feed', function() {scene.actionClean();}));
 		}
 		if (scene.activeNeeds.indexOf('fun') > -1) {
-			this.btns.push(new InGame.ActionBtn(this, -150, 0, 'ingame.action.btns.feed', function() {scene.actionFeed();}));
+			this.btns.push(new InGame.ActionBtn(this, -150, 0, 'ingame.action.btns.feed', function() {scene.actionFun();}));
 		}
 
 		this.tick = function(timeElapsed) {

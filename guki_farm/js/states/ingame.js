@@ -1,7 +1,6 @@
 var InGame = {
 	getGraphics: function() {
 		var graphics = [
-			'img/action_btn_feed.png',
 			'img/action_circle.png',
 			'img/bg.png',
 			'img/hen_dead.png',
@@ -36,16 +35,25 @@ var InGame = {
 			graphics.push('img/need_icons_'+ needs[need_idx] +'.png');
 		}
 
+		var actions = ['feed', 'wash', 'play', 'hug'];
+		for (var action_idx = 0; action_idx < actions.length; ++action_idx) {
+			graphics.push('img/action_btn_'+ actions[action_idx] +'.png');
+		}
+
 		return graphics;
 	},
 
 	getAnimations: function() {
 		var animations = {};
 
-		var action_btn_feed = new rtge.Animation();
-		action_btn_feed.steps = ['img/action_btn_feed.png'];
-		action_btn_feed.durations = [600000];
-		animations['ingame.action.btns.feed'] = action_btn_feed;
+		var actions = ['feed', 'wash', 'play', 'hug'];
+		for (var action_idx = 0; action_idx < actions.length; ++action_idx) {
+			var action_name = actions[action_idx];
+			var action_btn = new rtge.Animation();
+			action_btn.steps = ['img/action_btn_'+ action_name +'.png'];
+			action_btn.durations = [600000];
+			animations['ingame.action.btns.'+ action_name] = action_btn;
+		}
 
 		var action_circle = new rtge.Animation();
 		action_circle.steps = ['img/action_circle.png'];
@@ -628,8 +636,8 @@ var InGame = {
 		this.x = hen.x;
 		this.y = hen.y - 40;
 		this.z = 101;
-		this.anchorX = 250;
-		this.anchorY = 250;
+		this.anchorX = 175;
+		this.anchorY = 175;
 		this.animation = 'ingame.action.circle';
 
 		this.hen = hen;
@@ -637,16 +645,16 @@ var InGame = {
 
 		this.btns = [];
 		if (scene.activeNeeds.indexOf('food') > -1) {
-			this.btns.push(new InGame.ActionBtn(this, 0, -150, 'ingame.action.btns.feed', function() {scene.actionFeed();}));
+			this.btns.push(new InGame.ActionBtn(this, 0, -122, 'ingame.action.btns.feed', function() {scene.actionFeed();}));
 		}
 		if (scene.activeNeeds.indexOf('love') > -1) {
-			this.btns.push(new InGame.ActionBtn(this, 150, 0, 'ingame.action.btns.feed', function() {scene.actionHug();}));
+			this.btns.push(new InGame.ActionBtn(this, 122, 0, 'ingame.action.btns.hug', function() {scene.actionHug();}));
 		}
 		if (scene.activeNeeds.indexOf('hygiene') > -1) {
-			this.btns.push(new InGame.ActionBtn(this, 0, 150, 'ingame.action.btns.feed', function() {scene.actionClean();}));
+			this.btns.push(new InGame.ActionBtn(this, 0, 122, 'ingame.action.btns.wash', function() {scene.actionClean();}));
 		}
 		if (scene.activeNeeds.indexOf('fun') > -1) {
-			this.btns.push(new InGame.ActionBtn(this, -150, 0, 'ingame.action.btns.feed', function() {scene.actionFun();}));
+			this.btns.push(new InGame.ActionBtn(this, -122, 0, 'ingame.action.btns.play', function() {scene.actionFun();}));
 		}
 
 		this.tick = function(timeElapsed) {
@@ -660,8 +668,8 @@ var InGame = {
 		this.x = action_circle.x + x;
 		this.y = action_circle.y + y;
 		this.z = 102;
-		this.anchorX = 50;
-		this.anchorY = 50;
+		this.anchorX = 58;
+		this.anchorY = 58;
 		this.animation = animation;
 
 		this.offset_x = x;

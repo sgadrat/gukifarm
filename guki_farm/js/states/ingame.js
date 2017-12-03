@@ -227,10 +227,12 @@ var InGame = {
 		};
 
 		this.placeTreasure = function() {
-			var treasure = new InGame.Treasure(this, 1860/2 - 200/2, 1080/2 - 200/2);
-			rtge.addObject(treasure);
-			this.treasures.push(treasure);
-			this.repositionTreasures();
+			if (this.treasures.length < 50) {
+				var treasure = new InGame.Treasure(this, 1860/2 - 200/2, 1080/2 - 200/2);
+				rtge.addObject(treasure);
+				this.treasures.push(treasure);
+				this.repositionTreasures();
+			}
 		};
 
 		this.openTreasure = function(treasure) {

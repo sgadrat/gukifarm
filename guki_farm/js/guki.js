@@ -1,12 +1,21 @@
 var Guki = {
 	state: null,
+	statesFactories: null,
 
 	init: function() {
+		Guki.statesFactories = {
+			'ingame': InGame,
+			'title': Title,
+		};
+
 		var graphics = [];
 		var animations = {};
 
-		graphics = graphics.concat(InGame.getGraphics());
-		animations = Object.assign(animations, InGame.getAnimations());
+		for (var state_name in Guki.statesFactories) {
+			var factory = Guki.statesFactories[state_name];
+			graphics = graphics.concat(factory.getGraphics());
+			animations = Object.assign(animations, factory.getAnimations());
+		}
 
 		rtge.init(
 			'view',
@@ -25,7 +34,12 @@ var Guki = {
 			new rtge.Camera()
 		);
 
-		Guki.state = new InGame.State();
+		Guki.state = new Title.State();
+	},
+
+	changeState: function(newStateName) {
+		rtge.state.objects = [];
+		Guki.state = new Guki.statesFactories[newStateName].State();
 	},
 
 	tick: function(timeElapsed) {

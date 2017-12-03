@@ -6,8 +6,10 @@ var InGame = {
 			'img/bg.png',
 			'img/hen.png',
 			'img/hen_dead.png',
-			'img/hen_eat.png',
+			'img/hen_eating.png',
+			'img/hen_loving.png',
 			'img/loot_hen.png',
+			'img/loot_love.png',
 			'img/lower_fence.png',
 			'img/need_icons_eat.png',
 			'img/treasure.png',
@@ -32,10 +34,14 @@ var InGame = {
 		gui_treasure.durations = [600000];
 		animations['ingame.gui.treasure'] = gui_treasure;
 
-		var loot_hen = new rtge.Animation();
-		loot_hen.steps = ['img/loot_hen.png'];
-		loot_hen.durations = [600000];
-		animations['ingame.loot.hen'] = loot_hen;
+		var loot_types = ['hen', 'love'];
+		for (var loot_idx = 0; loot_idx < loot_types.length; ++loot_idx) {
+			var loot_type = loot_types[loot_idx];
+			var loot_anim = new rtge.Animation();
+			loot_anim.steps = ['img/loot_'+loot_type+'.png'];
+			loot_anim.durations = [600000];
+			animations['ingame.loot.'+loot_type] = loot_anim;
+		}
 
 		var lower_fence = new rtge.Animation();
 		lower_fence.steps = ['img/lower_fence.png'];
@@ -52,10 +58,14 @@ var InGame = {
 		hen_dead.durations = [600000];
 		animations['ingame.hen.dead'] = hen_dead;
 
-		var hen_eating = new rtge.Animation();
-		hen_eating.steps = ['img/hen_eat.png'];
-		hen_eating.durations = [600000];
-		animations['ingame.hen.eating'] = hen_eating;
+		var hen_emotes = ['eating', 'loving'];
+		for (var emote_idx = 0; emote_idx < hen_emotes.length; ++emote_idx) {
+			var emote_name = hen_emotes[emote_idx];
+			var hen_anim = new rtge.Animation();
+			hen_anim.steps = ['img/hen_'+emote_name+'.png'];
+			hen_anim.durations = [600000];
+			animations['ingame.hen.'+emote_name] = hen_anim;
+		}
 
 		var need_eat = new rtge.Animation();
 		need_eat.steps = ['img/need_icons_eat.png'];
@@ -73,13 +83,34 @@ var InGame = {
 		this.treasure_cooldown = 5000;
 		this.possible_loot = [
 			{
-				range: {min: 0, max: 100},
+				max_range: 10,
+				name: 'love',
+				animation: 'ingame.loot.love',
+				process: function(scene) {
+					// Activate love need
+					if (scene.activeNeeds.indexOf('love') == -1) {
+						scene.addNeed('love');
+					}
+
+					// Never re-loot this item
+					for (var loot_idx = 0; loot_idx < scene.possible_loot.length; ++loot_idx) {
+						if (scene.possible_loot[loot_idx].name == 'love') {
+							scene.possible_loot.splice(loot_idx, 1);
+							break;
+						}
+					}
+				},
+			},
+			{
+				max_range: 100,
+				name: 'hen',
 				animation: 'ingame.loot.hen',
 				process: function(scene) {
 					rtge.addObject(new InGame.Hen(600, 500, scene));
 				},
-			}
+			},
 		];
+		this.activeNeeds = ['food'];
 
 		// Methods
 		this.tick = function(timeElapsed) {
@@ -88,6 +119,10 @@ var InGame = {
 				this.placeTreasure();
 				this.treasure_cooldown = 4000 + Math.random() * 2000;
 			}
+		};
+
+		this.addNeed = function(needName) {
+			this.activeNeeds.push(needName);
 		};
 
 		this.placeTreasure = function() {
@@ -100,7 +135,14 @@ var InGame = {
 		this.openTreasure = function(treasure) {
 			for (var treasure_idx = 0; treasure_idx < this.treasures.length; ++treasure_idx) {
 				if (this.treasures[treasure_idx] === treasure) {
-					var loot = this.possible_loot[0];
+					var dice = Math.random() * 100;
+					var loot = null;
+					for (var loot_idx = 0; loot_idx < this.possible_loot.length; ++loot_idx) {
+						loot = this.possible_loot[loot_idx];
+						if (dice <= loot.max_range) {
+							break;
+						}
+					}
 					rtge.addObject(new InGame.LootMessage(this, treasure_idx, loot.animation, loot.process));
 					break;
 				}
@@ -152,6 +194,15 @@ var InGame = {
 			this.removeActionCircle();
 		};
 
+		this.actionHug = function() {
+			if (this.focused_hen == null) {
+				return;
+			}
+
+			this.focused_hen.startLoving();
+			this.removeActionCircle();
+		};
+
 		// Initialization logic
 		rtge.state.terrain = 'img/bg.png';
 		var lower_fence = new rtge.DynObject();
@@ -175,10 +226,12 @@ var InGame = {
 		this.direction = {x: 1, y: 0};
 		this.speed = 0.1;
 		this.needs = {
-			'food': {value: 0, speed:.1},
+			'food': {value: 0, speed: .1},
+			'love': {value: 0, speed: .05},
 		};
 		this.needIcons = {
-			'food': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'food', 0, -40),
+			'food': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'food', -15, -40-15),
+			'love': new InGame.NeedIcon(this, 'ingame.need_icons.eat', 'love', 15, -40-15),
 		};
 		this.needIconsAppearing = false;
 		this.scene = scene;
@@ -193,7 +246,7 @@ var InGame = {
 					this.x += this.direction.x * this.speed * timeElapsed;
 					this.y += this.direction.y * this.speed * timeElapsed;
 					break;
-				case 'eating':
+				case 'emote':
 					this.state.counter -= timeElapsed;
 					if (this.state.counter <= 0) {
 						this.startWalking();
@@ -203,11 +256,13 @@ var InGame = {
 
 			// Handle needs
 			for (need_name in this.needs) {
-				var need = this.needs[need_name];
-				need.value += need.speed;
-				if (need.value >= 100) {
-					this.die();
-					return;
+				if (this.scene.activeNeeds.indexOf(need_name) > -1) {
+					var need = this.needs[need_name];
+					need.value += need.speed;
+					if (need.value >= 100) {
+						this.die();
+						return;
+					}
 				}
 			}
 			if (this.preemptiveNeeds()) {
@@ -220,7 +275,7 @@ var InGame = {
 				return true;
 			}
 
-			if (this.state.name == 'eating') {
+			if (this.state.name == 'emote') {
 				return true;
 			}
 
@@ -255,7 +310,9 @@ var InGame = {
 			this.needIconsAppearing = true;
 
 			for (var need_name in this.needIcons) {
-				rtge.addObject(this.needIcons[need_name]);
+				if (this.scene.activeNeeds.indexOf(need_name) > -1) {
+					rtge.addObject(this.needIcons[need_name]);
+				}
 			}
 		};
 
@@ -276,9 +333,15 @@ var InGame = {
 		};
 
 		this.startEating = function() {
-			this.state = {name: 'eating', counter: 1000};
+			this.state = {name: 'emote', counter: 1000};
 			this.animation = 'ingame.hen.eating';
 			this.needs['food'].value = 0;
+		};
+
+		this.startLoving = function() {
+			this.state = {name: 'emote', counter: 1000};
+			this.animation = 'ingame.hen.loving';
+			this.needs['love'].value = 0;
 		};
 
 		this.die = function() {
@@ -414,12 +477,20 @@ var InGame = {
 
 		this.hen = hen;
 		var scene = this.hen.scene;
-		this.btns = [
-			new InGame.ActionBtn(this, 0, -150, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
-			new InGame.ActionBtn(this, 150, 0, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
-			new InGame.ActionBtn(this, 0, 150, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
-			new InGame.ActionBtn(this, -150, 0, 'ingame.action.btns.feed', function() {scene.actionFeed();}),
-		];
+
+		this.btns = [];
+		if (scene.activeNeeds.indexOf('food') > -1) {
+			this.btns.push(new InGame.ActionBtn(this, 0, -150, 'ingame.action.btns.feed', function() {scene.actionFeed();}));
+		}
+		if (scene.activeNeeds.indexOf('love') > -1) {
+			this.btns.push(new InGame.ActionBtn(this, 150, 0, 'ingame.action.btns.feed', function() {scene.actionHug();}));
+		}
+		if (scene.activeNeeds.indexOf('hygiene') > -1) {
+			this.btns.push(new InGame.ActionBtn(this, 0, 150, 'ingame.action.btns.feed', function() {scene.actionFeed();}));
+		}
+		if (scene.activeNeeds.indexOf('fun') > -1) {
+			this.btns.push(new InGame.ActionBtn(this, -150, 0, 'ingame.action.btns.feed', function() {scene.actionFeed();}));
+		}
 
 		this.tick = function(timeElapsed) {
 			this.x = hen.x;

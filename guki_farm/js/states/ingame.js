@@ -26,6 +26,7 @@ var InGame = {
 			if (frame_num < 8) {
 				graphics.push('img/hen/walking/right/frame_' + frame_num + '.png');
 				graphics.push('img/hen/walking/left/frame_' + frame_num + '.png');
+				graphics.push('img/hen/poping/frame_' + frame_num + '.png');
 			}
 		}
 
@@ -77,6 +78,13 @@ var InGame = {
 			hen_anim.durations = [600000];
 			animations['ingame.hen.'+emote_name] = hen_anim;
 		}
+
+		var hen_poping = new rtge.Animation();
+		for (var frame_num = 0; frame_num < 8; ++frame_num) {
+			hen_poping.steps.push('img/hen/poping/frame_'+ frame_num +'.png');
+			hen_poping.durations.push(160);
+		}
+		animations['ingame.hen.poping'] = hen_poping;
 
 		var need_eat = new rtge.Animation();
 		need_eat.steps = ['img/need_icons_eat.png'];
@@ -371,7 +379,7 @@ var InGame = {
 				return true;
 			}
 
-			if (this.state.name == 'emote') {
+			if (this.state.name == 'emote' && this.animation != 'ingame.hen.poping') {
 				return true;
 			}
 
@@ -431,24 +439,34 @@ var InGame = {
 		this.startEating = function() {
 			this.state = {name: 'emote', counter: 1000};
 			this.animation = 'ingame.hen.eating';
+			this.animationPosition = 0;
 			this.needs['food'].value = 0;
 		};
 
 		this.startLoving = function() {
 			this.state = {name: 'emote', counter: 1000};
 			this.animation = 'ingame.hen.loving';
+			this.animationPosition = 0;
 			this.needs['love'].value = 0;
 		};
 
 		this.startPlaying = function() {
 			this.state = {name: 'emote', counter: 1000};
 			this.animation = 'ingame.hen.playing';
+			this.animationPosition = 0;
 			this.needs['fun'].value = 0;
+		};
+
+		this.startPoping = function() {
+			this.state = {name: 'emote', counter: 160*8};
+			this.animation = 'ingame.hen.poping';
+			this.animationPosition = 0;
 		};
 
 		this.startCleaning = function() {
 			this.state = {name: 'emote', counter: 1000};
 			this.animation = 'ingame.hen.cleaning';
+			this.animationPosition = 0;
 			this.needs['hygiene'].value = 0;
 		};
 
@@ -537,7 +555,7 @@ var InGame = {
 		};
 
 		// Initialization logic
-		this.startWalking();
+		this.startPoping();
 	},
 
 	DeadHen: function(hen) {

@@ -152,7 +152,26 @@ var InGame = {
 		this.treasure_cooldown = 5000;
 		this.possible_loot = [
 			{
-				max_range: 100,
+				max_range: 10,
+				name: 'hygiene',
+				animation: 'ingame.loot.hygiene',
+				process: function(scene) {
+					// Activate love need
+					if (scene.activeNeeds.indexOf('hygiene') == -1) {
+						scene.addNeed('hygiene');
+					}
+
+					// Never re-loot this item
+					for (var loot_idx = 0; loot_idx < scene.possible_loot.length; ++loot_idx) {
+						if (scene.possible_loot[loot_idx].name == 'hygiene') {
+							scene.possible_loot.splice(loot_idx, 1);
+							break;
+						}
+					}
+				},
+			},
+			{
+				max_range: 20,
 				name: 'love',
 				animation: 'ingame.loot.love',
 				process: function(scene) {
@@ -171,7 +190,7 @@ var InGame = {
 				},
 			},
 			{
-				max_range: 100,
+				max_range: 30,
 				name: 'fun',
 				animation: 'ingame.loot.fun',
 				process: function(scene) {
@@ -183,25 +202,6 @@ var InGame = {
 					// Never re-loot this item
 					for (var loot_idx = 0; loot_idx < scene.possible_loot.length; ++loot_idx) {
 						if (scene.possible_loot[loot_idx].name == 'fun') {
-							scene.possible_loot.splice(loot_idx, 1);
-							break;
-						}
-					}
-				},
-			},
-			{
-				max_range: 100,
-				name: 'hygiene',
-				animation: 'ingame.loot.hygiene',
-				process: function(scene) {
-					// Activate love need
-					if (scene.activeNeeds.indexOf('hygiene') == -1) {
-						scene.addNeed('hygiene');
-					}
-
-					// Never re-loot this item
-					for (var loot_idx = 0; loot_idx < scene.possible_loot.length; ++loot_idx) {
-						if (scene.possible_loot[loot_idx].name == 'hygiene') {
 							scene.possible_loot.splice(loot_idx, 1);
 							break;
 						}

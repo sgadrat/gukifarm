@@ -234,7 +234,7 @@ var rtge = {
 					if (o.preDraw != null) {
 						o.preDraw();
 					}
-					rtge.canvasCtx.drawImage(img, imgPos.x, imgPos.y);
+					rtge.canvasCtx.drawImage(img, Math.round(imgPos.x), Math.round(imgPos.y));
 				}
 			}
 		}
@@ -250,7 +250,7 @@ var rtge = {
 				}else if (elem.imageClick != null && elem.state == 'click') {
 					stateImg = rtge.getImage(elem.imageClick);
 				}
-				rtge.canvasCtx.drawImage(stateImg, pos.x, pos.y, rtge.rpxToPx(elem.width), rtge.rpxToPx(elem.height));
+				rtge.canvasCtx.drawImage(stateImg, Math.round(pos.x), Math.round(pos.y), Math.round(rtge.rpxToPx(elem.width)), Math.round(rtge.rpxToPx(elem.height)));
 			}
 		}
 
@@ -588,7 +588,7 @@ var rtge = {
 			rtge.prerenderTilemaps
 		)
 		{
-			rtge.canvasCtx.drawImage(rtge.getImage(imageUrl), x, y);
+			rtge.canvasCtx.drawImage(rtge.getImage(imageUrl), Math.round(x), Math.round(y));
 		}else if (rtge.images[imageUrl].type == 'tilemap') {
 			rtge.drawTilemap(
 				rtge.canvasCtx, rtge.images[imageUrl],
@@ -674,7 +674,7 @@ var rtge = {
 			ctx.drawImage(
 				rtge.getImage(component),
 				0, 0, composite.width, composite.height,
-				renderX, renderY, composite.width, composite.height
+				Math.round(renderX), Math.round(renderY), composite.width, composite.height
 			);
 		}
 	},
